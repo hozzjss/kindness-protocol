@@ -6,6 +6,10 @@ telemetry = true
 requirements = []
 [contracts.kindness-protocol]
 path = "contracts/kindness-protocol.clar"
+depends_on = ["sip-009"]
+
+[contracts.sip-009]
+path = "contracts/sip-009.clar"
 depends_on = []
 
 [repl]
