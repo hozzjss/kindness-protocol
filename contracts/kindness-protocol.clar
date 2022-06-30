@@ -13,12 +13,24 @@
 ;; constants
 ;;
 (define-constant ERR-NON-TRANSFERABLE u1001)
+(define-constant ERR-RESTRICTED u1002)
 (define-constant ERR-NOT-FOUND u404)
 (define-constant ERR-NOT-AUTHORIZED u401)
+(define-constant ERR-INVALID-MODE u403)
+
+(define-constant PRIVACY-MODE-OPEN u0)
+(define-constant PRIVACY-MODE-RESTRICTED u1)
 ;; data maps and vars
 ;;
 (define-map nft-meta uint (string-ascii 59))
-(define-map members principal bool)
+(define-map members principal {
+    privacy-mode: uint
+})
+(define-map connection-requests { recipient: principal, index: uint } { sender: principal })
+(define-map connection-requests-indexer principal uint)
+(define-map connections {sender: principal, recipient: principal} {blocked: bool})
+
+
 
 
 (define-data-var last-token-id uint u0)
@@ -47,10 +59,33 @@
 )
 
 (define-read-only (is-member (account principal)) 
-    (match (map-get? members account) status status false)
+    (match (map-get? members account) status true false)
 )
 
-(define-public (transfer (nft-id uint) (sender principal) (receiver principal))
+(define-read-only (is-valid-mode (mode uint)) 
+    (or 
+        (is-eq mode PRIVACY-MODE-OPEN)
+        (is-eq mode PRIVACY-MODE-RESTRICTED)
+    ))
+
+(define-read-only (is-users-friends (account1 principal) (account2 principal)) 
+    (or
+        (not (default-to true (get blocked (map-get? connections {sender: account1, recipient: account2}))))
+        (not (default-to true (get blocked (map-get? connections {sender: account2, recipient: account1}))))
+    ))
+
+(define-read-only (can-receive-gratitude (account principal)) 
+    (match (map-get? members account)
+        member-data
+        (or
+            (is-eq (get privacy-mode member-data) PRIVACY-MODE-OPEN)
+            (is-users-friends tx-sender account)
+        )
+        true
+    )
+)
+
+(define-public (transfer (nft-id uint) (sender principal) (recipient principal))
     (err ERR-NON-TRANSFERABLE)
 )
 
@@ -60,6 +95,8 @@
             (token-id (+ u1 (var-get last-token-id)))
         )
         (asserts! (is-eq tx-sender contract-caller) (err ERR-NOT-AUTHORIZED))
+        (asserts! (can-receive-gratitude recipient) (err ERR-RESTRICTED))
+        (unwrap-panic (if (is-member recipient) (ok true) (invite-member recipient)))
         (asserts! (is-member recipient) (err ERR-NOT-AUTHORIZED))
         (nft-mint? gratitude token-id recipient)
     )
@@ -68,8 +105,9 @@
 (define-public (invite-member (account principal)) 
     (begin 
         (asserts! (is-eq tx-sender contract-caller) (err ERR-NOT-AUTHORIZED))
-        (asserts! (is-member account) (err ERR-NOT-AUTHORIZED))
-        (ok (map-insert members account true)))
+        (asserts! (is-member tx-sender) (err ERR-NOT-AUTHORIZED))
+        (asserts! (not (is-member account)) (err ERR-NOT-AUTHORIZED))
+        (ok (map-insert members account {privacy-mode: PRIVACY-MODE-OPEN})))
 )
 
 (define-public (burn (nft-id uint)) 
@@ -81,6 +119,15 @@
         (nft-burn? gratitude nft-id tx-sender))
 )
 
-(map-insert members tx-sender true)
+(define-public (set-privacy-mode (mode uint)) 
+    (begin 
+        (asserts! (is-eq tx-sender contract-caller) (err ERR-NOT-AUTHORIZED))
+        (asserts! (is-member tx-sender) (err ERR-NOT-AUTHORIZED))
+        (asserts! (is-valid-mode mode) (err ERR-INVALID-MODE))
+        (map-set members tx-sender {privacy-mode: mode})
+        (ok true))
+)
+
+(map-insert members tx-sender {privacy-mode: PRIVACY-MODE-OPEN})
 
 
