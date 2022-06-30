@@ -17,7 +17,9 @@
 (define-constant ERR-NOT-FOUND u404)
 (define-constant ERR-NOT-AUTHORIZED u401)
 (define-constant ERR-INVALID-MODE u403)
-
+(define-constant ERR-ALREADY-FRIENDS u409)
+(define-constant ERR-REQUEST-ALREADY-SENT u410)
+(define-constant ERR-OUT-OF-BOUNDS-MF u411)
 (define-constant PRIVACY-MODE-OPEN u0)
 (define-constant PRIVACY-MODE-RESTRICTED u1)
 ;; data maps and vars
@@ -28,6 +30,8 @@
 })
 (define-map connection-requests { recipient: principal, index: uint } { sender: principal })
 (define-map connection-requests-indexer principal uint)
+;; to prevent spam
+(define-map connection-requests-logger {sender: principal, recipient: principal} bool)
 (define-map connections {sender: principal, recipient: principal} {blocked: bool})
 
 
@@ -125,6 +129,36 @@
         (asserts! (is-member tx-sender) (err ERR-NOT-AUTHORIZED))
         (asserts! (is-valid-mode mode) (err ERR-INVALID-MODE))
         (map-set members tx-sender {privacy-mode: mode})
+        (ok true))
+)
+
+(define-public (add-friend (account principal)) 
+    (let 
+        (
+            (current-index (default-to u0 (map-get? connection-requests-indexer tx-sender)))
+        )
+        (asserts! (is-eq tx-sender contract-caller) (err ERR-NOT-AUTHORIZED))
+        (asserts! (and (is-member account) (is-member tx-sender)) (err ERR-NOT-AUTHORIZED))
+        (asserts! (not (is-users-friends account tx-sender)) (err ERR-ALREADY-FRIENDS))
+        (asserts! (is-none (map-get? connection-requests-logger {sender: tx-sender, recipient: account})) (err ERR-REQUEST-ALREADY-SENT))
+        (map-set connection-requests-indexer tx-sender (+ u1 current-index))
+        (map-set connection-requests  {recipient: account, index: current-index} {sender: tx-sender})
+        (ok true))
+)
+
+(define-public (accept-friend (account principal) (index uint)) 
+    (let 
+        (
+            (current-index (default-to u0 (map-get? connection-requests-indexer tx-sender)))
+        )
+        (asserts! (is-eq tx-sender contract-caller) (err ERR-NOT-AUTHORIZED))
+        (asserts! (and (is-member account) (is-member tx-sender)) (err ERR-NOT-AUTHORIZED))
+        (asserts! (is-some (map-get? connection-requests {recipient: account, index: index})) (err ERR-NOT-FOUND))
+        (asserts! (not (is-users-friends account tx-sender)) (err ERR-ALREADY-FRIENDS))
+        (asserts! (> current-index index) (err ERR-OUT-OF-BOUNDS-MF))
+        (map-set connections {sender: account, recipient: tx-sender} {blocked: false})
+        (map-delete connection-requests  {recipient: tx-sender, index: index})
+        (map-delete connection-requests-logger {sender: account, recipient: tx-sender})
         (ok true))
 )
 
