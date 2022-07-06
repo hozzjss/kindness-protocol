@@ -5,9 +5,13 @@
 ;; Alice ==> (G1) grateful for ==> Bob
 ;; Bob ==> (G2) grateful for ==> Bob (advocate for yourself yo!!)
 ;; and thus forming a network of gratitude
-;;
+;; three hundred forty undecillion two hundred eighty-two decillion three hundred sixty-six nonillion nine hundred twenty octillion nine hundred thirty-eight septillion four hundred sixty-three sextillion four hundred sixty-three quintillion three hundred seventy-four quadrillion six hundred seven trillion four hundred thirty-one billion seven hundred sixty-eight million two hundred eleven thousand four hundred fifty-five
 
-(define-non-fungible-token gratitude uint)
+
+;; byte structure
+;; type (1 byte) | lv1 ancestor or lv1 id (16 bytes) | lv2 ancestor or lv1 id + lv2 id (optional (32 bytes)) | lv3 ancestor lv1 id + lv2 id + lv3 id (optional (64 bytes))
+
+(define-non-fungible-token gratitude (buff 113))
 
 
 ;; constants
@@ -41,6 +45,58 @@
 ;; private functions
 ;;
 
+(define-private (read-buff64-closure (idx uint) (state { offset: uint, data: (buff 113), acc: (buff 64) }))
+    (let (
+        (byte-data (unwrap-panic (element-at (get data state) (+ idx (get offset state)))))
+    )
+        (merge state { acc: (unwrap-panic (as-max-len? (concat (get acc state) byte-data) u64)) })
+    )
+)
+
+(define-private (read-buff64 (data (buff 113)) (offset uint))
+    (get acc
+        (fold read-buff64-closure
+            (list u0 u1 u2 u3 u4 u5 u6 u7 u8 u9 u10 u11 u12 u13 u14 u15 u16 u17 u18 u19 u20 u21 u22 u23 u24 u25 u26 u27 u28 u29 u30 u31 u32 u33 u34 u35 u36 u37 u38 u39 u40 u41 u42 u43 u44 u45 u46 u47 u48 u49 u50 u51 u52 u53 u54 u55 u56 u57 u58 u59 u60 u61 u62 u63)
+            { offset: offset, data: data, acc: 0x }
+        )
+    )
+)
+
+(define-private (read-buff32-closure (idx uint) (state { offset: uint, data: (buff 113), acc: (buff 32) }))
+    (let (
+        (byte-data (unwrap-panic (element-at (get data state) (+ idx (get offset state)))))
+    )
+        (merge state { acc: (unwrap-panic (as-max-len? (concat (get acc state) byte-data) u32)) })
+    )
+)
+
+(define-private (read-buff32 (data (buff 113)) (offset uint))
+    (get acc
+        (fold read-buff32-closure
+            (list u0 u1 u2 u3 u4 u5 u6 u7 u8 u9 u10 u11 u12 u13 u14 u15 u16 u17 u18 u19 u20 u21 u22 u23 u24 u25 u26 u27 u28 u29 u30 u31)
+            { offset: offset, data: data, acc: 0x }
+        )
+    )
+)
+
+
+
+(define-private (read-buff16-closure (idx uint) (state { offset: uint, data: (buff 113), acc: (buff 16) }))
+    (let (
+        (byte-data (unwrap-panic (element-at (get data state) (+ idx (get offset state)))))
+    )
+        (merge state { acc: (unwrap-panic (as-max-len? (concat (get acc state) byte-data) u16)) })
+    )
+)
+
+(define-private (read-buff16 (data (buff 113)) (offset uint))
+    (get acc
+        (fold read-buff16-closure
+            (list u0 u1 u2 u3 u4 u5 u6 u7 u8 u9 u10 u11 u12 u13 u14 u15)
+            { offset: offset, data: data, acc: 0x }
+        )
+    )
+)
 ;; public functions
 ;;
 
