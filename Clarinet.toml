@@ -4,13 +4,21 @@ authors = []
 description = ""
 telemetry = true
 requirements = []
+boot_contracts = ["pox", "costs-v2", "bns"]
+
+[project.cache_location]
+path = ".requirements"
+[contracts.connections]
+path = "contracts/connections.clar"
+
 [contracts.kindness-protocol]
 path = "contracts/kindness-protocol.clar"
-depends_on = ["sip-009"]
+
+[contracts.math]
+path = "contracts/math.clar"
 
 [contracts.sip-009]
 path = "contracts/sip-009.clar"
-depends_on = []
 
 [repl]
 costs_version = 2
@@ -20,7 +28,7 @@ parser_version = 2
 passes = ["check_checker"]
 
 [repl.analysis.check_checker]
-strict = false
+strict = true
 trusted_sender = false
 trusted_caller = false
 callee_filter = false
