@@ -13,12 +13,11 @@ path = "contracts/connections.clar"
 
 [contracts.kindness-protocol]
 path = "contracts/kindness-protocol.clar"
+requirements = ["connections", "math"]
+
 
 [contracts.math]
 path = "contracts/math.clar"
-
-[contracts.sip-009]
-path = "contracts/sip-009.clar"
 
 [repl]
 costs_version = 2

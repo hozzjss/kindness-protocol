@@ -14,11 +14,6 @@ plan:
             cost: 64850
             path: contracts/connections.clar
         - contract-publish:
-            contract-name: sip-009
-            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            cost: 5020
-            path: contracts/sip-009.clar
-        - contract-publish:
             contract-name: math
             expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             cost: 50810
