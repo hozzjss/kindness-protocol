@@ -2,29 +2,29 @@
 id: 0
 name: Devnet deployment
 network: devnet
-stacks-node: "http://localhost:20353"
+stacks-node: "http://localhost:20443"
 bitcoin-node: "http://devnet:devnet@localhost:31443"
 plan:
   batches:
     - id: 0
       transactions:
         - contract-publish:
-            contract-name: math
-            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            cost: 50810
-            path: contracts/math.clar
-        - contract-publish:
             contract-name: connections
             expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            cost: 39470
+            cost: 64850
             path: contracts/connections.clar
-        - contract-publish:
-            contract-name: kindness-protocol
-            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            cost: 81680
-            path: contracts/kindness-protocol.clar
         - contract-publish:
             contract-name: sip-009
             expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             cost: 5020
             path: contracts/sip-009.clar
+        - contract-publish:
+            contract-name: math
+            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 50810
+            path: contracts/math.clar
+        - contract-publish:
+            contract-name: kindness-protocol
+            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 82860
+            path: contracts/kindness-protocol.clar
