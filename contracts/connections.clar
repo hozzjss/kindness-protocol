@@ -15,6 +15,8 @@
 (define-constant ERR-REQUEST-ALREADY-SENT u410)
 (define-constant ERR-NOT-FOUND u404)
 (define-constant ERR-OUT-OF-BOUNDS-MF u411)
+(define-constant ERR-ALREADY-BLOCKED u412)
+(define-constant ERR-NOT-BLOCKED u413)
 
 ;; data maps and vars
 ;;
@@ -25,7 +27,8 @@
 (define-map connection-requests-indexer principal uint)
 ;; to prevent spam
 (define-map connection-requests-logger {sender: principal, recipient: principal} bool)
-(define-map connections {sender: principal, recipient: principal} {blocked: bool})
+(define-map connections {sender: principal, recipient: principal} bool)
+(define-map blocked-users {blocker: principal, blocked: principal} bool)
 
 ;; private functions
 ;;
@@ -74,9 +77,51 @@
         (asserts! (is-some (map-get? connection-requests {recipient: account, index: index})) (err ERR-NOT-FOUND))
         (asserts! (not (is-users-friends account tx-sender)) (err ERR-ALREADY-FRIENDS))
         (asserts! (> current-index index) (err ERR-OUT-OF-BOUNDS-MF))
-        (map-set connections {sender: account, recipient: tx-sender} {blocked: false})
+        (map-set connections {sender: account, recipient: tx-sender} true)
         (map-delete connection-requests  {recipient: tx-sender, index: index})
         (map-delete connection-requests-logger {sender: account, recipient: tx-sender})
+        (ok true))
+)
+
+(define-public (reject-friend (account principal) (index uint)) 
+    (let 
+        (
+            (current-index (default-to u0 (map-get? connection-requests-indexer tx-sender)))
+        )
+        (asserts! (and (is-member account) (is-member tx-sender)) (err ERR-NOT-AUTHORIZED))
+        (asserts! (is-some (map-get? connection-requests {recipient: account, index: index})) (err ERR-NOT-FOUND))
+        (asserts! (not (is-users-friends account tx-sender)) (err ERR-ALREADY-FRIENDS))
+        (asserts! (> current-index index) (err ERR-OUT-OF-BOUNDS-MF))
+        (map-delete connection-requests  {recipient: tx-sender, index: index})
+        (map-delete connection-requests-logger {sender: account, recipient: tx-sender})
+        (ok true))
+)
+
+
+(define-public (remove-friend (account principal)) 
+    (begin 
+        (asserts! (is-users-friends account tx-sender) (err ERR-NOT-FOUND))
+        (map-delete connections {sender: account, recipient: tx-sender})
+        (map-delete connections {sender: tx-sender, recipient: account})
+        (ok true))
+)
+
+(define-public (block-user (account principal) (request-index (optional uint)))
+    (begin 
+        (asserts! (and  (is-member tx-sender)) (err ERR-NOT-AUTHORIZED))
+        (asserts! (is-none (map-get? blocked-users {blocked: account, blocker: tx-sender})) (err ERR-ALREADY-BLOCKED))
+        (map-delete connections {sender: account, recipient: tx-sender})
+        (map-delete connections {sender: tx-sender, recipient: account})
+        (match request-index index (map-delete connection-requests {recipient: account, index: index}) false)
+        (map-insert blocked-users {blocked: account, blocker: tx-sender} true)
+        (ok true))
+)
+
+(define-public (unblock-users (account principal)) 
+    (begin 
+        (asserts! (and  (is-member tx-sender)) (err ERR-NOT-AUTHORIZED))
+        (asserts! (is-some (map-get? blocked-users {blocked: account, blocker: tx-sender})) (err ERR-NOT-BLOCKED))
+        (map-delete blocked-users {blocked: account, blocker: tx-sender})
         (ok true))
 )
 
@@ -97,8 +142,8 @@
 
 (define-read-only (is-users-friends (account1 principal) (account2 principal)) 
     (or
-        (not (default-to true (get blocked (map-get? connections {sender: account1, recipient: account2}))))
-        (not (default-to true (get blocked (map-get? connections {sender: account2, recipient: account1}))))
+        (default-to false (map-get? connections {sender: account1, recipient: account2}))
+        (default-to false (map-get? connections {sender: account2, recipient: account1}))
     ))
 
 
