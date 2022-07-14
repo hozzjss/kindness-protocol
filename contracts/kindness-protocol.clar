@@ -168,16 +168,16 @@
     )
 )
 
-(define-public (mint (parent-id (optional (buff 48))) (nft-uri (string-ascii 256)) (recipient principal)) 
+(define-public (mint (parent-id (optional (buff 48))) (nft-uri (string-ascii 256)) (recipient (optional principal))) 
     (let 
         (   
             (nft-level (match parent-id id (/ (len id) u16) u0))
         )
         (asserts! (or (is-none parent-id) (is-some (get-token-uri-raw (unwrap-panic parent-id)))) (err ERR-NOT-FOUND))
-        (unwrap-panic (if (contract-call? .connections is-member recipient) (ok true) (contract-call? .connections invite-member recipient)))
+        (try! (match recipient rec (if (contract-call? .connections is-member rec) (ok true) (contract-call? .connections invite-member rec)) (ok true)))
         (asserts! (> (len nft-uri) u0) (err ERR-TOO-SHORT))
         (asserts! (<= nft-level u2) (err ERR-LEVEL-OUT-OF-RANGE))
-        (if (is-eq nft-level u0) (handle-lv0-mint nft-uri recipient) 
+        (if (and (is-some recipient) (is-eq nft-level u0)) (handle-lv0-mint nft-uri (unwrap-panic recipient)) 
             (let 
                 (
                     (parent (unwrap-panic parent-id))

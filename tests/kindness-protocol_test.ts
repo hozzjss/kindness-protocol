@@ -23,7 +23,7 @@ Clarinet.test({
           types.ascii(
             "https://images.gamma.io/ipfs/Qme9rxy7Eq6ro9GscFNC7D95aQSwzMwapr9EE98qzEZs6h"
           ),
-          types.principal(wallet_1.address),
+          types.some(types.principal(wallet_1.address)),
         ],
         deployer.address
       ),
@@ -35,7 +35,7 @@ Clarinet.test({
           types.ascii(
             "https://images.gamma.io/ipfs/Qme9rxy7Eq6ro9GscFNC7D95aQSwzMwapr9EE98qzEZs6h"
           ),
-          types.principal(wallet_1.address),
+          types.none(),
         ],
         deployer.address
       ),
@@ -49,7 +49,7 @@ Clarinet.test({
           types.ascii(
             "https://images.gamma.io/ipfs/Qme9rxy7Eq6ro9GscFNC7D95aQSwzMwapr9EE98qzEZs6h"
           ),
-          types.principal(wallet_1.address),
+          types.none(),
         ],
         deployer.address
       ),
