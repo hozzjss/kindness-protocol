@@ -1,4 +1,4 @@
-;; kindness-protocol v1
+;; gratitude-protocol v1
 ;; A protocol for spreading kindness and gratitude.
 ;; through forming a network of community members 
 ;; Alice ==> (G1) grateful for ==> Bob

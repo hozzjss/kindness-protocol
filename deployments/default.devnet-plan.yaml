@@ -11,15 +11,18 @@ plan:
         - contract-publish:
             contract-name: connections
             expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            cost: 64850
+            cost: 60810
             path: contracts/connections.clar
+            anchor-block-only: true
         - contract-publish:
             contract-name: math
             expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             cost: 50810
             path: contracts/math.clar
+            anchor-block-only: true
         - contract-publish:
             contract-name: kindness-protocol
             expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            cost: 82860
+            cost: 83510
             path: contracts/kindness-protocol.clar
+            anchor-block-only: true
